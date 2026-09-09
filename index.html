@@ -104,7 +104,7 @@ const TL={snf:'Skilled Nursing',alf:'Assisted Living',ilf:'Independent Living',h
 const TC={snf:'#1B6B73',alf:'#C4922A',ilf:'#8B5CF6',hospice:'#EC4899',corporate:'#374151',healthcare:'#2A9DA5'};
 let map,markers,activeMarker=null,selectedState=null,selectedType=null,searchQuery='';
 map=L.map('map',{zoomControl:true}).setView([44.5,-117.0],6);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'OpenStreetMap, CARTO',maxZoom:18}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap contributors',maxZoom:19}).addTo(map);
 markers=L.markerClusterGroup({maxClusterRadius:40,spiderfyOnMaxZoom:true,showCoverageOnHover:false,
 iconCreateFunction:function(c){var n=c.getChildCount(),s=n>10?'large':n>5?'medium':'small';
 return L.divIcon({html:'<div>'+n+'</div>',className:'marker-cluster marker-cluster-'+s,iconSize:L.point(40,40)})}});
