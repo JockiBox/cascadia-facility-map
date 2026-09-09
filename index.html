@@ -135,7 +135,8 @@ body{font-family:'Inter',sans-serif;background:#0a0f1a;color:#e2e8f0;overflow:hi
 .map-container{flex:1;position:relative;background:#0a0f1a}
 #map{width:100%;height:100%}
 
-/* Dark map overrides */
+/* Dark map tiles via CSS filter on OSM */
+.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(0.75) contrast(1.3)}
 .leaflet-container{background:#0a0f1a!important}
 .leaflet-control-zoom a{
   background:rgba(13,21,32,0.9)!important;color:#94a3b8!important;
@@ -299,8 +300,8 @@ let map,markers,activeMarker=null,selectedState=null,selectedType=null,searchQue
 
 // Dark map tiles (Stadia Dark)
 map=L.map('map',{zoomControl:true}).setView([44.5,-117.0],6);
-L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',{
-  attribution:'Stadia Maps, OpenStreetMap',maxZoom:18
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'OpenStreetMap',maxZoom:19
 }).addTo(map);
 
 markers=L.markerClusterGroup({maxClusterRadius:45,spiderfyOnMaxZoom:true,showCoverageOnHover:false,
