@@ -3,160 +3,408 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cascadia Healthcare - Facility Map</title>
+<title>Cascadia Healthcare - Facility Network</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F4F0;color:#1a1a1a}
-:root{--forest:#1B6B73;--gold:#C4922A;--forest-light:#2A9DA5;--cream:#F5F4F0}
-.header{background:var(--forest);color:white;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.15);position:sticky;top:0;z-index:1000}
-.header-left{display:flex;align-items:center;gap:12px}
-.header-logo{font-weight:800;font-size:18px;letter-spacing:1px}
-.header-logo span{color:var(--gold)}
-.header-subtitle{font-size:12px;color:#a3d9d6;margin-top:2px}
-.header-stats{display:flex;gap:20px}
-.stat{text-align:center}
-.stat-value{font-size:22px;font-weight:700}
-.stat-label{font-size:10px;color:#a3d9d6;text-transform:uppercase;letter-spacing:1px}
-.layout{display:flex;height:calc(100vh - 56px)}
-.sidebar{width:360px;background:white;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden}
-.sidebar-header{padding:16px;border-bottom:1px solid #e5e7eb;flex-shrink:0}
-.search-box{width:100%;padding:10px 14px 10px 36px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;background:#fafaf8}
-.search-box:focus{border-color:var(--forest)}
-.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af}
-.filters{padding:12px 16px;border-bottom:1px solid #e5e7eb;flex-shrink:0}
-.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.filter-btn{padding:4px 12px;border-radius:20px;border:1px solid #e5e7eb;background:white;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px}
-.filter-btn:hover{border-color:var(--forest)}
-.filter-btn.active{background:var(--forest);color:white;border-color:var(--forest)}
+body{font-family:'Inter',sans-serif;background:#0a0f1a;color:#e2e8f0;overflow:hidden}
+
+/* --- Header --- */
+.header{
+  background:linear-gradient(135deg,#0d1520 0%,#132030 100%);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding:0 28px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;z-index:1000;
+}
+.header::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(42,157,165,0.4),rgba(196,146,42,0.4),transparent);
+}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#1B6B73,#2A9DA5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:white;
+  box-shadow:0 0 20px rgba(42,157,165,0.3);
+}
+.header-title{font-size:15px;font-weight:700;letter-spacing:2px;color:#e2e8f0}
+.header-title span{color:#C4922A}
+.header-sub{font-size:11px;color:#64748b;letter-spacing:1px;margin-top:1px}
+.header-stats{display:flex;gap:32px}
+.stat{text-align:center;position:relative}
+.stat-value{
+  font-size:28px;font-weight:800;
+  background:linear-gradient(135deg,#2A9DA5,#C4922A);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.stat-label{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-top:2px}
+.stat+.stat::before{
+  content:'';position:absolute;left:-16px;top:4px;bottom:4px;width:1px;
+  background:rgba(255,255,255,0.08);
+}
+
+/* --- Layout --- */
+.layout{display:flex;height:calc(100vh - 64px)}
+
+/* --- Sidebar --- */
+.sidebar{
+  width:380px;
+  background:linear-gradient(180deg,#0d1520 0%,#111827 100%);
+  border-right:1px solid rgba(255,255,255,0.06);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar-header{padding:20px 20px 16px;flex-shrink:0}
+.search-wrap{position:relative}
+.search-box{
+  width:100%;padding:12px 16px 12px 42px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;font-size:14px;color:#e2e8f0;
+  outline:none;transition:all 0.3s;font-family:'Inter',sans-serif;
+}
+.search-box::placeholder{color:#475569}
+.search-box:focus{border-color:rgba(42,157,165,0.5);background:rgba(255,255,255,0.06);box-shadow:0 0 20px rgba(42,157,165,0.1)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#475569}
+
+/* --- Filters --- */
+.filters{padding:0 20px 16px;flex-shrink:0}
+.filter-section{margin-bottom:12px}
+.filter-label{font-size:10px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.filter-row{display:flex;flex-wrap:wrap;gap:6px}
+.filter-btn{
+  padding:6px 14px;border-radius:20px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03);
+  font-size:11px;color:#94a3b8;cursor:pointer;
+  transition:all 0.25s;display:flex;align-items:center;gap:5px;
+  font-family:'Inter',sans-serif;
+}
+.filter-btn:hover{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#e2e8f0}
+.filter-btn.active{
+  background:linear-gradient(135deg,rgba(42,157,165,0.2),rgba(42,157,165,0.1));
+  border-color:rgba(42,157,165,0.4);color:#5eead4;
+}
 .filter-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.filter-label{font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.facility-list{overflow-y:auto;flex:1;padding:8px 0}
-.facility-item{padding:10px 16px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:10px;border-left:3px solid transparent}
-.facility-item:hover{background:#f9fafb}
-.facility-item.active{background:#f0fdf4;border-left-color:var(--forest)}
-.facility-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* --- List --- */
+.count-badge{
+  font-size:11px;color:#475569;padding:10px 20px;
+  border-top:1px solid rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.count-num{color:#2A9DA5;font-weight:700}
+.facility-list{overflow-y:auto;flex:1;padding:4px 0}
+.facility-list::-webkit-scrollbar{width:4px}
+.facility-list::-webkit-scrollbar-track{background:transparent}
+.facility-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+.facility-item{
+  padding:12px 20px;cursor:pointer;
+  transition:all 0.2s;display:flex;align-items:center;gap:12px;
+  border-left:3px solid transparent;position:relative;
+}
+.facility-item::after{
+  content:'';position:absolute;bottom:0;left:20px;right:20px;height:1px;
+  background:rgba(255,255,255,0.03);
+}
+.facility-item:hover{background:rgba(255,255,255,0.03)}
+.facility-item.active{
+  background:linear-gradient(90deg,rgba(42,157,165,0.1),transparent);
+  border-left-color:#2A9DA5;
+}
+.facility-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 6px currentColor;
+}
 .facility-info{flex:1;min-width:0}
-.facility-name{font-size:13px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.facility-meta{font-size:11px;color:#9ca3af;margin-top:1px}
-.facility-type{font-size:10px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;flex-shrink:0}
-.count-badge{font-size:11px;color:#6b7280;padding:8px 16px;text-align:center;border-bottom:1px solid #f3f4f6}
-.map-container{flex:1;position:relative}
+.facility-name{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.facility-meta{font-size:11px;color:#475569;margin-top:2px}
+.facility-type{
+  font-size:9px;padding:3px 8px;border-radius:6px;
+  background:rgba(255,255,255,0.05);color:#64748b;
+  flex-shrink:0;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;
+}
+
+/* --- Map --- */
+.map-container{flex:1;position:relative;background:#0a0f1a}
 #map{width:100%;height:100%}
-.facility-card{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:16px 20px;z-index:800;min-width:300px;max-width:400px;display:none}
-.facility-card.visible{display:block}
-.card-header{display:flex;justify-content:space-between;align-items:start}
-.card-name{font-size:16px;font-weight:700;color:var(--forest)}
-.card-close{cursor:pointer;color:#9ca3af;font-size:18px;padding:0 4px}
-.card-close:hover{color:#1a1a1a}
-.card-meta{font-size:13px;color:#6b7280;margin-top:4px}
-.card-badges{display:flex;gap:8px;margin-top:8px}
-.card-badge{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:500}
-.marker-cluster-small{background-color:rgba(27,107,115,.3)}
-.marker-cluster-small div{background-color:var(--forest);color:white;font-weight:700;font-size:13px}
-.marker-cluster-medium{background-color:rgba(196,146,42,.3)}
-.marker-cluster-medium div{background-color:var(--gold);color:white;font-weight:700;font-size:13px}
-.marker-cluster-large{background-color:rgba(42,157,165,.3)}
-.marker-cluster-large div{background-color:var(--forest-light);color:white;font-weight:700;font-size:14px}
-@media(max-width:768px){.layout{flex-direction:column}.sidebar{width:100%;height:45vh;border-right:none;border-bottom:1px solid #e5e7eb}.map-container{height:55vh}.header-stats{display:none}.facility-card{min-width:unset;left:16px;right:16px;transform:none}}
+
+/* Dark map overrides */
+.leaflet-container{background:#0a0f1a!important}
+.leaflet-control-zoom a{
+  background:rgba(13,21,32,0.9)!important;color:#94a3b8!important;
+  border-color:rgba(255,255,255,0.1)!important;
+}
+.leaflet-control-zoom a:hover{background:rgba(42,157,165,0.3)!important;color:white!important}
+.leaflet-control-attribution{
+  background:rgba(13,21,32,0.8)!important;color:#475569!important;font-size:10px!important;
+}
+.leaflet-control-attribution a{color:#64748b!important}
+.leaflet-popup-content-wrapper{
+  background:rgba(13,21,32,0.95)!important;color:#e2e8f0!important;
+  border:1px solid rgba(255,255,255,0.1)!important;
+  border-radius:12px!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;
+}
+.leaflet-popup-tip{background:rgba(13,21,32,0.95)!important}
+.leaflet-tooltip{
+  background:rgba(13,21,32,0.95)!important;color:#e2e8f0!important;
+  border:1px solid rgba(255,255,255,0.1)!important;
+  border-radius:8px!important;padding:8px 12px!important;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4)!important;font-size:12px!important;
+}
+.leaflet-tooltip::before{border-top-color:rgba(13,21,32,0.95)!important}
+
+/* Cluster styling */
+.marker-cluster-small,.marker-cluster-medium,.marker-cluster-large{
+  background:none!important;
+}
+.marker-cluster-small div{
+  background:linear-gradient(135deg,#1B6B73,#2A9DA5)!important;
+  color:white!important;font-weight:700!important;font-size:12px!important;
+  width:36px!important;height:36px!important;margin:2px!important;
+  border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  box-shadow:0 0 15px rgba(42,157,165,0.4),0 2px 8px rgba(0,0,0,0.3)!important;
+}
+.marker-cluster-medium div{
+  background:linear-gradient(135deg,#C4922A,#E8B84B)!important;
+  color:white!important;font-weight:700!important;font-size:13px!important;
+  width:42px!important;height:42px!important;margin:4px!important;
+  border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  box-shadow:0 0 20px rgba(196,146,42,0.4),0 2px 8px rgba(0,0,0,0.3)!important;
+}
+.marker-cluster-large div{
+  background:linear-gradient(135deg,#7c3aed,#a78bfa)!important;
+  color:white!important;font-weight:700!important;font-size:14px!important;
+  width:48px!important;height:48px!important;margin:6px!important;
+  border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  box-shadow:0 0 25px rgba(124,58,237,0.4),0 2px 8px rgba(0,0,0,0.3)!important;
+}
+
+/* --- Detail card --- */
+.facility-card{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(13,21,32,0.92);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.5);
+  padding:20px 24px;z-index:800;
+  min-width:320px;max-width:420px;
+  opacity:0;pointer-events:none;
+  transition:all 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.facility-card.visible{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.card-header{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.card-name{font-size:17px;font-weight:700;color:#e2e8f0;line-height:1.3}
+.card-close{
+  cursor:pointer;color:#475569;font-size:20px;padding:2px 6px;
+  border-radius:6px;transition:all 0.2s;flex-shrink:0;
+}
+.card-close:hover{color:#e2e8f0;background:rgba(255,255,255,0.06)}
+.card-meta{font-size:13px;color:#64748b;margin-top:6px}
+.card-badges{display:flex;gap:8px;margin-top:12px}
+.card-badge{
+  font-size:11px;padding:4px 12px;border-radius:8px;font-weight:600;
+  border:1px solid;
+}
+.card-coords{font-size:11px;color:#475569;margin-top:10px;font-family:monospace}
+
+/* --- Animated glow on markers --- */
+@keyframes pulse-glow{
+  0%,100%{box-shadow:0 0 4px currentColor}
+  50%{box-shadow:0 0 12px currentColor,0 0 20px currentColor}
+}
+
+/* --- Mobile --- */
+@media(max-width:768px){
+  .layout{flex-direction:column}
+  .sidebar{width:100%;height:40vh;border-right:none;border-bottom:1px solid rgba(255,255,255,0.06)}
+  .map-container{height:60vh}
+  .header-stats{display:none}
+  .facility-card{min-width:unset;left:16px;right:16px;transform:translateY(20px);bottom:16px}
+  .facility-card.visible{transform:translateY(0)}
+}
 </style>
 </head>
 <body>
+
 <div class="header">
-<div class="header-left"><div><div class="header-logo">CASCADIA <span>SUMMIT</span></div><div class="header-subtitle">Facility Network Map</div></div></div>
-<div class="header-stats">
-<div class="stat"><div class="stat-value" id="totalCount">0</div><div class="stat-label">Facilities</div></div>
-<div class="stat"><div class="stat-value" id="stateCount">0</div><div class="stat-label">States</div></div>
-<div class="stat"><div class="stat-value" id="snfCount">0</div><div class="stat-label">SNF</div></div>
+  <div class="header-left">
+    <div class="logo-mark">C</div>
+    <div>
+      <div class="header-title">CASCADIA <span>HEALTHCARE</span></div>
+      <div class="header-sub">Facility Network</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-value" id="totalCount">0</div><div class="stat-label">Facilities</div></div>
+    <div class="stat"><div class="stat-value" id="stateCount">0</div><div class="stat-label">States</div></div>
+    <div class="stat"><div class="stat-value" id="snfCount">0</div><div class="stat-label">SNF</div></div>
+  </div>
 </div>
-</div>
+
 <div class="layout">
-<div class="sidebar">
-<div class="sidebar-header"><div style="position:relative">
-<svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-<input type="text" class="search-box" placeholder="Search facilities..." id="searchInput" />
-</div></div>
-<div class="filters">
-<div class="filter-label">State</div><div class="filter-row" id="stateFilters"></div>
-<div class="filter-label" style="margin-top:10px">Type</div><div class="filter-row" id="typeFilters"></div>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" class="search-box" placeholder="Search facilities..." id="searchInput" />
+      </div>
+    </div>
+    <div class="filters">
+      <div class="filter-section">
+        <div class="filter-label">State</div>
+        <div class="filter-row" id="stateFilters"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Facility Type</div>
+        <div class="filter-row" id="typeFilters"></div>
+      </div>
+    </div>
+    <div class="count-badge">
+      <span>Showing <span class="count-num" id="filteredNum">87</span> facilities</span>
+      <span id="filterLabel"></span>
+    </div>
+    <div class="facility-list" id="facilityList"></div>
+  </div>
+
+  <div class="map-container">
+    <div id="map"></div>
+    <div class="facility-card" id="facilityCard">
+      <div class="card-header">
+        <div class="card-name" id="cardName"></div>
+        <span class="card-close" id="cardClose">&#215;</span>
+      </div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-badges" id="cardBadges"></div>
+      <div class="card-coords" id="cardCoords"></div>
+    </div>
+  </div>
 </div>
-<div class="count-badge" id="filteredCount">87 facilities</div>
-<div class="facility-list" id="facilityList"></div>
-</div>
-<div class="map-container">
-<div id="map"></div>
-<div class="facility-card" id="facilityCard">
-<div class="card-header"><div class="card-name" id="cardName"></div><span class="card-close" id="cardClose">&times;</span></div>
-<div class="card-meta" id="cardMeta"></div>
-<div class="card-badges" id="cardBadges"></div>
-</div>
-</div>
-</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 const facilities = [{"name": "Cascadia Healthcare", "city": "Boise", "state": "ID", "lat": 43.615, "lng": -116.2023, "type": "corporate"}, {"name": "Envision Healthcare", "city": "Boise", "state": "ID", "lat": 43.6185, "lng": -116.21, "type": "healthcare"}, {"name": "Northern Healthcare", "city": "Boise", "state": "ID", "lat": 43.612, "lng": -116.195, "type": "healthcare"}, {"name": "Three Rivers Healthcare", "city": "Boise", "state": "ID", "lat": 43.6095, "lng": -116.215, "type": "healthcare"}, {"name": "Avencare Health", "city": "Boise", "state": "ID", "lat": 43.621, "lng": -116.207, "type": "healthcare"}, {"name": "Aspen Park of Cascadia", "city": "Boise", "state": "ID", "lat": 43.617, "lng": -116.189, "type": "snf"}, {"name": "Cascadia of Boise", "city": "Boise", "state": "ID", "lat": 43.606, "lng": -116.22, "type": "snf"}, {"name": "Royal Plaza Health and Rehabilitation of Cascadia", "city": "Boise", "state": "ID", "lat": 43.624, "lng": -116.198, "type": "snf"}, {"name": "Royal Plaza of Olympus Living - ALF", "city": "Boise", "state": "ID", "lat": 43.6255, "lng": -116.196, "type": "alf"}, {"name": "Shaw Mountain of Cascadia", "city": "Boise", "state": "ID", "lat": 43.598, "lng": -116.23, "type": "snf"}, {"name": "Meadow View Assisted Living", "city": "Boise", "state": "ID", "lat": 43.603, "lng": -116.225, "type": "alf"}, {"name": "Arbor Valley of Cascadia", "city": "Emmett", "state": "ID", "lat": 43.8736, "lng": -116.4993, "type": "snf"}, {"name": "Caldwell of Cascadia", "city": "Caldwell", "state": "ID", "lat": 43.6629, "lng": -116.6874, "type": "snf"}, {"name": "Canyon West of Cascadia", "city": "Caldwell", "state": "ID", "lat": 43.658, "lng": -116.693, "type": "snf"}, {"name": "Cascadia of Nampa", "city": "Nampa", "state": "ID", "lat": 43.5407, "lng": -116.5635, "type": "snf"}, {"name": "Cascadia of Lewiston", "city": "Lewiston", "state": "ID", "lat": 46.4165, "lng": -117.0177, "type": "snf"}, {"name": "The Orchards of Cascadia", "city": "Lewiston", "state": "ID", "lat": 46.42, "lng": -117.012, "type": "snf"}, {"name": "Cherry Ridge of Cascadia", "city": "Idaho Falls", "state": "ID", "lat": 43.4926, "lng": -112.0341, "type": "snf"}, {"name": "Eagle Rock Health and Rehabilitation of Cascadia", "city": "Idaho Falls", "state": "ID", "lat": 43.487, "lng": -112.04, "type": "snf"}, {"name": "Paradise Creek Health and Rehabilitation of Cascadia", "city": "Moscow", "state": "ID", "lat": 46.7324, "lng": -117.0002, "type": "snf"}, {"name": "Paradise Creek of Olympus Retirement Living", "city": "Moscow", "state": "ID", "lat": 46.735, "lng": -116.997, "type": "alf"}, {"name": "Paradise Creek Fairview Estates of Olympus Retirement", "city": "Moscow", "state": "ID", "lat": 46.73, "lng": -117.004, "type": "ilf"}, {"name": "Clearwater Health & Rehabilitation of Cascadia", "city": "Orofino", "state": "ID", "lat": 46.4746, "lng": -116.255, "type": "snf"}, {"name": "Coeur d'Alene Health and Rehabilitation of Cascadia", "city": "Coeur d'Alene", "state": "ID", "lat": 47.6777, "lng": -116.7805, "type": "snf"}, {"name": "Grangeville Health and Rehabilitation of Cascadia", "city": "Grangeville", "state": "ID", "lat": 45.9266, "lng": -116.1222, "type": "snf"}, {"name": "Mountain Valley of Cascadia", "city": "Kellogg", "state": "ID", "lat": 47.5385, "lng": -116.1193, "type": "snf"}, {"name": "Payette Healthcare of Cascadia", "city": "Payette", "state": "ID", "lat": 44.0782, "lng": -116.9338, "type": "snf"}, {"name": "Silverton Health and Rehabilitation of Cascadia", "city": "Silverton", "state": "ID", "lat": 47.5351, "lng": -116.0823, "type": "snf"}, {"name": "Teton Healthcare of Cascadia", "city": "Rexburg", "state": "ID", "lat": 43.826, "lng": -111.7897, "type": "snf"}, {"name": "The Cove of Cascadia", "city": "Pocatello", "state": "ID", "lat": 42.8713, "lng": -112.4455, "type": "snf"}, {"name": "Village Manor of Cascadia", "city": "Cottonwood", "state": "ID", "lat": 46.049, "lng": -116.3488, "type": "snf"}, {"name": "Weiser Care of Cascadia", "city": "Weiser", "state": "ID", "lat": 44.251, "lng": -116.9693, "type": "snf"}, {"name": "Twin Falls Transitional Care of Cascadia", "city": "Twin Falls", "state": "ID", "lat": 42.5558, "lng": -114.4604, "type": "snf"}, {"name": "Columbia Healthcare", "city": "Portland", "state": "OR", "lat": 45.5152, "lng": -122.6784, "type": "corporate"}, {"name": "Gabriel Park Post Acute", "city": "Portland", "state": "OR", "lat": 45.478, "lng": -122.712, "type": "snf"}, {"name": "Beaverton Post Acute of Cascadia", "city": "Beaverton", "state": "OR", "lat": 45.4871, "lng": -122.8037, "type": "snf"}, {"name": "Bend Transitional Care", "city": "Bend", "state": "OR", "lat": 44.0582, "lng": -121.3153, "type": "snf"}, {"name": "Clackamas Rehabilitation of Cascadia", "city": "Gladstone", "state": "OR", "lat": 45.3807, "lng": -122.5937, "type": "snf"}, {"name": "Coos Bay Rehabilitation of Cascadia", "city": "Coos Bay", "state": "OR", "lat": 43.3665, "lng": -124.2179, "type": "snf"}, {"name": "Creekside Health and Rehabilitation of Cascadia", "city": "Roseburg", "state": "OR", "lat": 43.2165, "lng": -123.3417, "type": "snf"}, {"name": "Curry Village Health and Rehabilitation of Cascadia", "city": "Brookings", "state": "OR", "lat": 42.0526, "lng": -124.284, "type": "snf"}, {"name": "Eugene Rehabilitation of Cascadia", "city": "Eugene", "state": "OR", "lat": 44.0521, "lng": -123.0868, "type": "snf"}, {"name": "Village Park Post Acute", "city": "Eugene", "state": "OR", "lat": 44.046, "lng": -123.078, "type": "snf"}, {"name": "Fairlawn Health and Rehabilitation of Cascadia", "city": "Gresham", "state": "OR", "lat": 45.5023, "lng": -122.4306, "type": "snf"}, {"name": "Fairlawn of Olympus Retirement Living", "city": "Gresham", "state": "OR", "lat": 45.505, "lng": -122.426, "type": "ilf"}, {"name": "The Abbey of Olympus Retirement Living", "city": "Gresham", "state": "OR", "lat": 45.499, "lng": -122.435, "type": "ilf"}, {"name": "Hillsboro Post Acute", "city": "Hillsboro", "state": "OR", "lat": 45.5229, "lng": -122.9898, "type": "snf"}, {"name": "Junction City Rehabilitation of Cascadia", "city": "Junction City", "state": "OR", "lat": 44.2193, "lng": -123.2054, "type": "snf"}, {"name": "Keizer Court Post Acute", "city": "Keizer", "state": "OR", "lat": 44.9901, "lng": -123.0262, "type": "snf"}, {"name": "King City Rehabilitation", "city": "Tigard", "state": "OR", "lat": 45.4132, "lng": -122.7709, "type": "snf"}, {"name": "Kruse Way Post Acute", "city": "Lake Oswego", "state": "OR", "lat": 45.4107, "lng": -122.7231, "type": "snf"}, {"name": "Lebanon Rehabilitation of Cascadia", "city": "Lebanon", "state": "OR", "lat": 44.5368, "lng": -122.907, "type": "snf"}, {"name": "Newport Rehabilitation of Cascadia", "city": "Newport", "state": "OR", "lat": 44.6368, "lng": -124.0535, "type": "snf"}, {"name": "Oregon City Rehabilitation", "city": "Oregon City", "state": "OR", "lat": 45.3573, "lng": -122.6068, "type": "snf"}, {"name": "Salem Transitional Care", "city": "Salem", "state": "OR", "lat": 44.9429, "lng": -123.0351, "type": "snf"}, {"name": "Secora Rehabilitation of Cascadia", "city": "Salem", "state": "OR", "lat": 44.948, "lng": -123.029, "type": "snf"}, {"name": "Sunnyside Transitional Care", "city": "Salem", "state": "OR", "lat": 44.937, "lng": -123.041, "type": "snf"}, {"name": "Village Manor of Cascadia (OR)", "city": "Cottonwood", "state": "OR", "lat": 46.052, "lng": -116.352, "type": "snf"}, {"name": "Table Rock Post Acute", "city": "Medford", "state": "OR", "lat": 42.3265, "lng": -122.8756, "type": "snf"}, {"name": "Three Fountains Post Acute", "city": "Medford", "state": "OR", "lat": 42.321, "lng": -122.869, "type": "snf"}, {"name": "Alderwood Park Health & Rehabilitation", "city": "Lynnwood", "state": "WA", "lat": 47.8209, "lng": -122.3151, "type": "snf"}, {"name": "Anacortes Health and Rehab", "city": "Anacortes", "state": "WA", "lat": 48.5126, "lng": -122.6127, "type": "snf"}, {"name": "Rosario Assisted Living and Memory Care", "city": "Anacortes", "state": "WA", "lat": 48.509, "lng": -122.618, "type": "alf"}, {"name": "Brookfield Health & Rehabilitation of Cascadia", "city": "Chehalis", "state": "WA", "lat": 46.662, "lng": -122.964, "type": "snf"}, {"name": "Cascade Park Rehabilitation", "city": "Vancouver", "state": "WA", "lat": 45.6205, "lng": -122.5951, "type": "snf"}, {"name": "Hudson Bay Health & Rehabilitation", "city": "Vancouver", "state": "WA", "lat": 45.631, "lng": -122.6605, "type": "snf"}, {"name": "Clarkston Health and Rehabilitation of Cascadia", "city": "Clarkston", "state": "WA", "lat": 46.4166, "lng": -117.0456, "type": "snf"}, {"name": "Colfax Health and Rehabilitation of Cascadia", "city": "Colfax", "state": "WA", "lat": 46.8805, "lng": -117.3645, "type": "snf"}, {"name": "Colville Health & Rehabilitation of Cascadia", "city": "Colville", "state": "WA", "lat": 48.5467, "lng": -117.9056, "type": "snf"}, {"name": "Cypress Assisted Living", "city": "Spokane Valley", "state": "WA", "lat": 47.6588, "lng": -117.2395, "type": "alf"}, {"name": "Olympus Living at Spokane Valley", "city": "Spokane Valley", "state": "WA", "lat": 47.662, "lng": -117.234, "type": "alf"}, {"name": "Olympus Retirement Living", "city": "Spokane Valley", "state": "WA", "lat": 47.6555, "lng": -117.244, "type": "ilf"}, {"name": "Spokane Valley Health and Rehabilitation of Cascadia", "city": "Spokane Valley", "state": "WA", "lat": 47.665, "lng": -117.229, "type": "snf"}, {"name": "Highland Health & Rehabilitation of Cascadia", "city": "Spokane", "state": "WA", "lat": 47.6588, "lng": -117.426, "type": "snf"}, {"name": "Stafholt Health and Rehabilitation of Cascadia", "city": "Spokane", "state": "WA", "lat": 47.653, "lng": -117.419, "type": "snf"}, {"name": "Pacific Ridge Post Acute", "city": "Tacoma", "state": "WA", "lat": 47.2529, "lng": -122.4443, "type": "snf"}, {"name": "Puget Sound Health and Rehabilitation", "city": "Tacoma", "state": "WA", "lat": 47.248, "lng": -122.438, "type": "snf"}, {"name": "Queen Anne Post Acute", "city": "Seattle", "state": "WA", "lat": 47.6372, "lng": -122.3571, "type": "snf"}, {"name": "Richmond Beach Rehabilitation", "city": "Shoreline", "state": "WA", "lat": 47.7621, "lng": -122.3736, "type": "snf"}, {"name": "Sequim Rehabilitation", "city": "Sequim", "state": "WA", "lat": 48.0795, "lng": -123.1015, "type": "snf"}, {"name": "Snohomish Health and Rehabilitation of Cascadia", "city": "Snohomish", "state": "WA", "lat": 47.9129, "lng": -122.0985, "type": "snf"}, {"name": "Libby Care Center of Cascadia", "city": "Libby", "state": "MT", "lat": 48.3881, "lng": -115.5559, "type": "snf"}, {"name": "Mount Ascension Transitional Care of Cascadia", "city": "Helena", "state": "MT", "lat": 46.5958, "lng": -112.027, "type": "snf"}, {"name": "Mountain View of Cascadia", "city": "Helena", "state": "MT", "lat": 46.592, "lng": -112.034, "type": "snf"}, {"name": "Boswell Transitional Care of Cascadia", "city": "Sun City", "state": "AZ", "lat": 33.5978, "lng": -112.2712, "type": "snf"}, {"name": "NorthPark Health and Rehabilitation of Cascadia", "city": "Phoenix", "state": "AZ", "lat": 33.4484, "lng": -112.074, "type": "snf"}, {"name": "Shores Hospice", "city": "Sacramento", "state": "CA", "lat": 38.5816, "lng": -121.4944, "type": "hospice"}];
-const SC={ID:'#1B6B73',OR:'#C4922A',WA:'#2A9DA5',MT:'#8B5CF6',AZ:'#E97451',CA:'#EC4899'};
+const SC={ID:'#2dd4bf',OR:'#f59e0b',WA:'#38bdf8',MT:'#a78bfa',AZ:'#fb923c',CA:'#f472b6'};
 const SN={ID:'Idaho',OR:'Oregon',WA:'Washington',MT:'Montana',AZ:'Arizona',CA:'California'};
 const TL={snf:'Skilled Nursing',alf:'Assisted Living',ilf:'Independent Living',hospice:'Hospice',corporate:'Corporate',healthcare:'Healthcare Co.'};
-const TC={snf:'#1B6B73',alf:'#C4922A',ilf:'#8B5CF6',hospice:'#EC4899',corporate:'#374151',healthcare:'#2A9DA5'};
+const TC={snf:'#2dd4bf',alf:'#f59e0b',ilf:'#a78bfa',hospice:'#f472b6',corporate:'#94a3b8',healthcare:'#38bdf8'};
 let map,markers,activeMarker=null,selectedState=null,selectedType=null,searchQuery='';
+
+// Dark map tiles (Stadia Dark)
 map=L.map('map',{zoomControl:true}).setView([44.5,-117.0],6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap contributors',maxZoom:19}).addTo(map);
-markers=L.markerClusterGroup({maxClusterRadius:40,spiderfyOnMaxZoom:true,showCoverageOnHover:false,
-iconCreateFunction:function(c){var n=c.getChildCount(),s=n>10?'large':n>5?'medium':'small';
-return L.divIcon({html:'<div>'+n+'</div>',className:'marker-cluster marker-cluster-'+s,iconSize:L.point(40,40)})}});
+L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',{
+  attribution:'Stadia Maps, OpenStreetMap',maxZoom:18
+}).addTo(map);
+
+markers=L.markerClusterGroup({maxClusterRadius:45,spiderfyOnMaxZoom:true,showCoverageOnHover:false,
+  iconCreateFunction:function(c){
+    var n=c.getChildCount(),cls=n>10?'large':n>5?'medium':'small';
+    return L.divIcon({html:'<div>'+n+'</div>',className:'marker-cluster marker-cluster-'+cls,iconSize:L.point(n>10?60:n>5?50:40,n>10?60:n>5?50:40)})
+  }
+});
+
 var states=[...new Set(facilities.map(f=>f.state))];
 document.getElementById('totalCount').textContent=facilities.length;
 document.getElementById('stateCount').textContent=states.length;
 document.getElementById('snfCount').textContent=facilities.filter(f=>f.type==='snf').length;
+
+// Build filters
 var stateCounts={};facilities.forEach(f=>{stateCounts[f.state]=(stateCounts[f.state]||0)+1});
 var sf=document.getElementById('stateFilters');
 Object.entries(stateCounts).sort((a,b)=>b[1]-a[1]).forEach(([st,ct])=>{
-var b=document.createElement('button');b.className='filter-btn';b.dataset.state=st;
-b.innerHTML='<span class="filter-dot" style="background:'+SC[st]+'"></span>'+SN[st]+' ('+ct+')';
-b.onclick=()=>{selectedState=selectedState===st?null:st;document.querySelectorAll('#stateFilters .filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.state===selectedState));render()};
-sf.appendChild(b)});
+  var b=document.createElement('button');b.className='filter-btn';b.dataset.state=st;
+  b.innerHTML='<span class="filter-dot" style="background:'+SC[st]+';box-shadow:0 0 6px '+SC[st]+'"></span>'+SN[st]+' <span style="opacity:0.5">'+ct+'</span>';
+  b.onclick=()=>{selectedState=selectedState===st?null:st;document.querySelectorAll('#stateFilters .filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.state===selectedState));render()};
+  sf.appendChild(b)
+});
 var typeCounts={};facilities.forEach(f=>{typeCounts[f.type]=(typeCounts[f.type]||0)+1});
 var tf=document.getElementById('typeFilters');
 Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).forEach(([tp,ct])=>{
-var b=document.createElement('button');b.className='filter-btn';b.dataset.type=tp;
-b.innerHTML=TL[tp]+' ('+ct+')';
-b.onclick=()=>{selectedType=selectedType===tp?null:tp;document.querySelectorAll('#typeFilters .filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.type===selectedType));render()};
-tf.appendChild(b)});
+  var b=document.createElement('button');b.className='filter-btn';b.dataset.type=tp;
+  b.innerHTML=TL[tp]+' <span style="opacity:0.5">'+ct+'</span>';
+  b.onclick=()=>{selectedType=selectedType===tp?null:tp;document.querySelectorAll('#typeFilters .filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.type===selectedType));render()};
+  tf.appendChild(b)
+});
 document.getElementById('searchInput').addEventListener('input',function(e){searchQuery=e.target.value.toLowerCase();render()});
+
 function getFiltered(){return facilities.filter(f=>{
-if(selectedState&&f.state!==selectedState)return false;
-if(selectedType&&f.type!==selectedType)return false;
-if(searchQuery&&!f.name.toLowerCase().includes(searchQuery)&&!f.city.toLowerCase().includes(searchQuery))return false;
-return true})}
+  if(selectedState&&f.state!==selectedState)return false;
+  if(selectedType&&f.type!==selectedType)return false;
+  if(searchQuery&&!f.name.toLowerCase().includes(searchQuery)&&!f.city.toLowerCase().includes(searchQuery))return false;
+  return true
+})}
+
 function render(){
-var filtered=getFiltered();
-document.getElementById('filteredCount').textContent=filtered.length+' facilities';
-var list=document.getElementById('facilityList');list.innerHTML='';
-filtered.forEach(f=>{var d=document.createElement('div');
-d.className='facility-item'+(activeMarker===f.name?' active':'');
-d.innerHTML='<div class="facility-dot" style="background:'+SC[f.state]+'"></div><div class="facility-info"><div class="facility-name">'+f.name+'</div><div class="facility-meta">'+f.city+', '+f.state+'</div></div><div class="facility-type">'+(TL[f.type]||f.type)+'</div>';
-d.onclick=()=>selectFacility(f);list.appendChild(d)});
-markers.clearLayers();
-filtered.forEach(f=>{var m=L.circleMarker([f.lat,f.lng],{radius:activeMarker===f.name?10:7,fillColor:SC[f.state],color:'white',weight:2,opacity:1,fillOpacity:activeMarker===f.name?1:.85});
-m.bindTooltip('<strong>'+f.name+'</strong><br>'+f.city+', '+f.state,{direction:'top',offset:[0,-8]});
-m.on('click',()=>selectFacility(f));markers.addLayer(m)});
-map.addLayer(markers);
-if(filtered.length>0&&(selectedState||selectedType||searchQuery)){
-var bounds=L.latLngBounds(filtered.map(f=>[f.lat,f.lng]));
-map.fitBounds(bounds,{padding:[40,40],maxZoom:10})}}
+  var filtered=getFiltered();
+  document.getElementById('filteredNum').textContent=filtered.length;
+  var fl=document.getElementById('filterLabel');
+  fl.textContent=selectedState?SN[selectedState]:(selectedType?TL[selectedType]:'');
+
+  var list=document.getElementById('facilityList');list.innerHTML='';
+  filtered.forEach(f=>{
+    var d=document.createElement('div');
+    d.className='facility-item'+(activeMarker===f.name?' active':'');
+    d.innerHTML='<div class="facility-dot" style="background:'+SC[f.state]+';color:'+SC[f.state]+'"></div><div class="facility-info"><div class="facility-name">'+f.name+'</div><div class="facility-meta">'+f.city+', '+f.state+'</div></div><div class="facility-type">'+f.type+'</div>';
+    d.onclick=()=>selectFacility(f);
+    d.onmouseenter=()=>{if(activeMarker!==f.name)d.querySelector('.facility-dot').style.animation='pulse-glow 1.5s infinite'};
+    d.onmouseleave=()=>{d.querySelector('.facility-dot').style.animation='none'};
+    list.appendChild(d)
+  });
+
+  markers.clearLayers();
+  filtered.forEach(f=>{
+    var color=SC[f.state]||'#999';
+    var isActive=activeMarker===f.name;
+    var m=L.circleMarker([f.lat,f.lng],{
+      radius:isActive?12:7,
+      fillColor:color,color:isActive?'white':color,
+      weight:isActive?2.5:1.5,opacity:1,
+      fillOpacity:isActive?1:0.75,
+      className:'map-dot'
+    });
+    var tip='<strong style="color:'+color+'">'+f.name+'</strong><br><span style="color:#94a3b8">'+f.city+', '+f.state+' &middot; '+TL[f.type]+'</span>';
+    m.bindTooltip(tip,{direction:'top',offset:[0,-8]});
+    m.on('click',()=>selectFacility(f));
+    markers.addLayer(m)
+  });
+  map.addLayer(markers);
+  if(filtered.length>0&&(selectedState||selectedType||searchQuery)){
+    map.fitBounds(L.latLngBounds(filtered.map(f=>[f.lat,f.lng])),{padding:[50,50],maxZoom:10})
+  }
+}
+
 function selectFacility(f){
-activeMarker=activeMarker===f.name?null:f.name;
-var card=document.getElementById('facilityCard');
-if(activeMarker){document.getElementById('cardName').textContent=f.name;
-document.getElementById('cardMeta').textContent=f.city+', '+(SN[f.state]||f.state);
-document.getElementById('cardBadges').innerHTML='<span class="card-badge" style="background:'+SC[f.state]+'20;color:'+SC[f.state]+'">'+SN[f.state]+'</span><span class="card-badge" style="background:'+TC[f.type]+'20;color:'+TC[f.type]+'">'+TL[f.type]+'</span>';
-card.classList.add('visible');map.setView([f.lat,f.lng],Math.max(map.getZoom(),10),{animate:true})}
-else{card.classList.remove('visible')}render()}
-document.getElementById('cardClose').onclick=()=>{activeMarker=null;document.getElementById('facilityCard').classList.remove('visible');render()};
+  activeMarker=activeMarker===f.name?null:f.name;
+  var card=document.getElementById('facilityCard');
+  if(activeMarker){
+    document.getElementById('cardName').textContent=f.name;
+    document.getElementById('cardMeta').textContent=f.city+', '+(SN[f.state]||f.state);
+    var sc=SC[f.state],tc=TC[f.type];
+    document.getElementById('cardBadges').innerHTML=
+      '<span class="card-badge" style="background:'+sc+'15;color:'+sc+';border-color:'+sc+'30">'+SN[f.state]+'</span>'+
+      '<span class="card-badge" style="background:'+tc+'15;color:'+tc+';border-color:'+tc+'30">'+TL[f.type]+'</span>';
+    document.getElementById('cardCoords').textContent=f.lat.toFixed(4)+'N, '+Math.abs(f.lng).toFixed(4)+'W';
+    card.classList.add('visible');
+    map.flyTo([f.lat,f.lng],Math.max(map.getZoom(),10),{duration:0.8})
+  } else {
+    card.classList.remove('visible')
+  }
+  render()
+}
+
+document.getElementById('cardClose').onclick=()=>{
+  activeMarker=null;
+  document.getElementById('facilityCard').classList.remove('visible');
+  render()
+};
+
 render();
 </script>
 </body>
